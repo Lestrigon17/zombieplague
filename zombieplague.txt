@@ -1,0 +1,14 @@
+"Gamemode"
+{
+	"base"			"base"
+	"title"			"Zombie Plague"
+	"maps"			"^zombie_|^zm_|^zp_"
+	"author"		"Lestrigon"
+	"menusystem"	"1"
+
+	"settings"
+	{
+
+	}
+
+}
