@@ -59,7 +59,6 @@ if SERVER then
 		for k,v in pairs(zm:playerGetAll()) do
 			if (v:Team() != TEAM_HUMAN) then
 				v:MakeHuman();
-				print("asfdasd")
 			end
 			v.CanRespawn = true;
 		end;
@@ -69,6 +68,7 @@ if SERVER then
 			v:Spawn();
 			GAMEMODE:PlayerLoadout(v);
 		end
+		netstream.Start(_, "zm:hud:notification", "%brown%T-Virus %twhite% был выпущен в воздух");
 
 		for k, v in pairs(zm:playerGetAll()) do
 			zm.weapon:OpenWeaponMenu(v);
@@ -97,6 +97,7 @@ if SERVER then
 
 		death = table.Random(zm:playerGetAll(true));
 		death:MakeZombie(true);
+		netstream.Start(_, "zm:hud:notification", "%brown%T-Virus %twhite%поглотил мозги %brown%"..death:Name().."");
 
 		for k,v in pairs(zm:playerGetAll()) do
 			v.DeathBlock = math.Clamp((v.DeathBlock or 0) - 1, 0, 10);

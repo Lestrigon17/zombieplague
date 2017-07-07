@@ -51,6 +51,7 @@ if (meta) then
 		self:SetWalkSpeed(zombieData["Speed"]);
 		self:SetHealth(zombieData["Health"] + (first and 3000+zombieData["Health"]*.3 or 0));	// If first zombie then +3000 hp +30% from base
 		self:SetModel(zombieData["Model"]);
+		self:SetNWString("zp_class", zombieClass);
 
 		for k,v in pairs(zombieData["Weapons"]) do
 			self:Give(v);
@@ -94,6 +95,7 @@ if (meta) then
 		zm.sql:SetData("zp_ammo_"..self:SteamID64(), ammo);
 		self.zm.ammopacks = ammo;
 		self:SetNWInt("zp_ammo", ammo);
+		netstream.Start(self, "zm:hud:notification", "%brown%"..num.." %twhite% ammo");
 	end;
 
 	function meta:TakeAmmoPacks(num)

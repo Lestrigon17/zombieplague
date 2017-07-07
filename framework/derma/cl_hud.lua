@@ -52,12 +52,64 @@ function zm.hud:AlphaColor(color, alpha)
 	return Color(color.r, color.g, color.b, alpha);
 end;
 
-function zm.hud:DrawLastDamage(lply, x, y)
-	local lastTime, lastValue = self.store["lastDMGTime"], self.store["lastDMGValue"];
-	lastTime = lastTime or 0;
-	lastValue = lastValue or 0;
+local positions = {
+	[1] = {0,-1},
+	[4] = {1,0},
+	[7] = {0,1},
+	[10] = {-1,0},
 
-	draw.SimpleText("-"..lastValue, "zm:hud:small", x/2, y/2, self:AlphaColor(zm.colors.dodgerblue, 150/2*math.Clamp(lastTime+3-CurTime(), 0, 5)), 1, 1);
+	[11] = {-math.sin(45), -math.cos(45)},
+	[5] = {math.sin(45), math.cos(45)},
+	[3] = {math.sin(45), -math.cos(45)},
+	[9] = {-math.sin(45), math.cos(45)},
+
+	[8] = {-math.cos(45), math.sin(45)},
+	[6] = {math.cos(45), math.sin(45)},
+	[12] = {-math.cos(45), -math.sin(45)},
+	[2] = {math.cos(45), -math.sin(45)},
+};
+local lastHits = {};
+local notifications = {};
+
+function draw.OutlinedBox( x, y, w, h, thickness, clr )
+	surface.SetDrawColor( clr )
+	for i=0, thickness - 1 do
+		surface.DrawOutlinedRect( x + i, y + i, w - i * 2, h - i * 2 )
+	end
+end
+
+local colors = {
+	function(lply, ent)
+		if (ent:IsPlayer() and ent:Team() != lply:Team()) then
+			return zm.colors.red
+		end;
+		if (ent:IsPlayer() and ent:Team() == lply:Team()) then
+			return zm.colors.royalblue
+		end;
+		return false;
+	end,
+}
+
+function zm.hud:DrawLastDamage(lply, x, y)
+	local lSpeed = lply:GetVelocity():Length2D();
+	local size1 = 10 + 6 / 1 * math.Clamp(lSpeed/lply:GetMaxSpeed(),0,1);
+	local size2 = 2 - 2 / 1 * math.Clamp(lSpeed/lply:GetMaxSpeed(),0,1);
+
+	for k,v in pairs(lastHits) do
+		draw.SimpleText("-"..v[2], "zm:hud:small", x/2+55*positions[v[3]][1], y/2+55*positions[v[3]][2], self:AlphaColor(zm.colors.dodgerblue, 255/1*math.Clamp(v[1]+1-CurTime(), 0, 5)), 1, 1);
+	end
+
+	if (lply:Team() == TEAM_HUMAN and lply:Alive()) then
+		local ent = lply:GetEyeTrace().Entity;
+		local drawColor = zm.colors.twhite;
+		for k,v in pairs(colors) do
+			if (v(lply, ent)) then
+				drawColor = v(lply, ent);
+			end;
+		end;
+		surface.DrawCircle(x/2, y/2, size1, drawColor.r, drawColor.g, drawColor.b, 25-25*(lSpeed/lply:GetMaxSpeed()));
+		draw.RoundedBox(size2/2, x/2-size2/2, y/2-size2/2, size2, size2, drawColor);
+	end;
 end;	
 
 function zm.hud:DrawInfoBar(lply, x, y)
@@ -74,6 +126,15 @@ function zm.hud:DrawInfoBar(lply, x, y)
 	
 	draw.SimpleParsedText(ROUND_VARS["HumansWins"], "zm:hud:big2", x/2-w/2-12, 25+textSize4+5, self:AlphaColor(zm.colors.turquoise, 150), 3, 0);
 	draw.SimpleParsedText(ROUND_VARS["ZombiesWins"], "zm:hud:big2", x/2+w/2-10, 25+textSize4+5, self:AlphaColor(zm.colors.turquoise, 150), 0, 0);
+
+	local ent = lply:GetEyeTrace().Entity;
+	if (ent:IsPlayer()) then
+		if (ent:Team() == TEAM_HUMAN) then
+			draw.SimpleParsedText(ent:Name().." -- "..ent:Health().." HP / "..ent:Armor().." AP", "zm:hud:normal", x/2+10, y/2+65, self:AlphaColor(zm.colors.royalblue, 150), 2, 0);
+		else
+			draw.SimpleParsedText(ent:Name().." // "..(zm.zombie.store[ent:GetNWString("zp_class")]["Name"]), "zm:hud:normal", x/2+10, y/2+65, self:AlphaColor(zm.colors.tomato, 150), 2, 0);
+		end;
+	end;
 end;
 
 function zm.hud:DrawRoundBar(lply, x, y)
@@ -87,6 +148,13 @@ function zm.hud:DrawRoundBar(lply, x, y)
 	end;
 end;
 
+function zm.hud:DrawNotifications(lply, x, y)
+	for k,v in pairs(notifications) do
+		if (v[1] + v[2] < CurTime()) then notifications[k] = nil; continue; end;
+		draw.SimpleParsedText("%twhite%[%white% "..v[3].." %twhite%]", "zm:hud:normal", x/2+10, y/2+65+textSize3+textSize2*(k-1), Color(255,255,255), 2, 0);
+	end;
+end;
+
 hook.Add("HUDPaint", "zm:hud", function()
 	local lply, x, y = LocalPlayer(), ScrW(), ScrH();
 
@@ -96,6 +164,7 @@ hook.Add("HUDPaint", "zm:hud", function()
 
 	zm.hud:DrawInfoBar(lply, x, y);
 	zm.hud:DrawRoundBar(lply, x, y);
+	zm.hud:DrawNotifications(lply, x, y);
 end);
 
 --[[-------------------------------------------------------------------------
@@ -104,8 +173,15 @@ HOOKS
 local toHide = {
 	CHudHealth = true,
 	CHudBattery = true,
-	CHudCommentary = true
+	CHudCommentary = true,
+	CHudCrosshair = true,
+	CHudMessage = true,
+	CHudSuitPower = true
 };
+
+function GM:HUDDrawTargetID()
+end;
+
 hook.Add( "HUDShouldDraw", "zm:hud", function( name )
 	if (toHide[name]) then return false; end;
 end )
@@ -132,8 +208,25 @@ hook.Add("zm:round:PrepareTimer", "zm:hud:timer", function(data)
 		end);
 	end);
 end);
+
+local lastHitPos = 1;
  
 netstream.Hook("zm:hud:damage", function(damage)
-	zm.hud.store["lastDMGTime"] = CurTime();
-	zm.hud.store["lastDMGValue"] = damage;
+	lastHitPos = lastHitPos + 1;
+	if (lastHitPos > #positions) then
+		lastHitPos = 1;
+	end;
+
+	table.insert(lastHits, 1, {CurTime(), damage, lastHitPos});
+	if (#lastHits > #positions) then
+		for k,v in pairs(lastHits) do
+			if (k > #positions) then
+				lastHits[k] = nil;
+			end;
+		end;
+	end;
+end);
+
+netstream.Hook("zm:hud:notification", function(text)
+	table.insert(notifications, 1, {CurTime(), 5, text});
 end);

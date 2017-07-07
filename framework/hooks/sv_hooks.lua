@@ -162,7 +162,9 @@ Damage
 ---------------------------------------------------------------------------*/
 function GM:ScalePlayerDamage( ply, hitgroup, dmginfo )
 	if (ply:Team() == TEAM_HUMAN and dmginfo:GetAttacker():Team() == TEAM_ZOMBIE and #zm:GetAlives(TEAM_HUMAN) > 1 and ply:Armor() <= 0) then
-		ply:MakeZombie(); return;
+		ply:MakeZombie(); 
+		netstream.Start(_, "zm:hud:notification", "%twhite%Зомби сожрали мозг %brown%"..death:Name().."");
+		return;
 	end;
 
 	if (dmginfo:GetAttacker():IsPlayer() and dmginfo:GetAttacker():Team() == TEAM_HUMAN) then
