@@ -17,4 +17,4 @@ Zombie Plague - This is a special mode in which Zombies fight by Humans. The goa
 -------
 
 # How to install (for DEV)
-* Move folder content from (**zombieplague**) to your addon's game folder (**.../steamapps/garrysmod/garrysmod/addons/**)
+* Move folder content from ``DEVELOPER Content`` to your addon's game folder (**.../steamapps/garrysmod/garrysmod/addons/**)
