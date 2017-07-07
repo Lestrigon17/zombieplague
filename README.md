@@ -2,7 +2,7 @@
 
 [![Github All Releases](https://img.shields.io/github/downloads/Lestrigon17/zombieplague/total.svg)]()
 [![issues](https://img.shields.io/github/issues-raw/badges/shields/website.svg)]()
-[![version](https://img.shields.io/badge/DEV%20Build-0607-ff69b4.svg)]()
+[![version](https://img.shields.io/badge/DEV%20Build-0707-ff69b4.svg)]()
 
 * [Site of the project](https://lestrigon.pw/)
 * [Steam collection](http://steamcommunity.com/sharedfiles/filedetails/?id=504822533/)
